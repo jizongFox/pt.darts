@@ -5,6 +5,7 @@ import torchvision.transforms as transforms
 
 
 class Cutout(object):
+
     def __init__(self, length):
         self.length = length
 
@@ -19,7 +20,7 @@ class Cutout(object):
         x1 = np.clip(x - self.length // 2, 0, w)
         x2 = np.clip(x + self.length // 2, 0, w)
 
-        mask[y1: y2, x1: x2] = 0.
+        mask[y1:y2, x1:x2] = 0.
         mask = torch.from_numpy(mask)
         mask = mask.expand_as(img)
         img *= mask
@@ -40,22 +41,25 @@ def data_transforms(dataset, cutout_length):
         MEAN = [0.13066051707548254]
         STD = [0.30810780244715075]
         transf = [
-            transforms.RandomAffine(degrees=15, translate=(0.1, 0.1), scale=(0.9, 1.1), shear=0.1)
+            transforms.RandomAffine(degrees=15,
+                                    translate=(0.1, 0.1),
+                                    scale=(0.9, 1.1),
+                                    shear=0.1)
         ]
     elif dataset == 'fashionmnist':
         MEAN = [0.28604063146254594]
         STD = [0.35302426207299326]
         transf = [
-            transforms.RandomAffine(degrees=15, translate=(0.1, 0.1), scale=(0.9, 1.1), shear=0.1),
+            transforms.RandomAffine(degrees=15,
+                                    translate=(0.1, 0.1),
+                                    scale=(0.9, 1.1),
+                                    shear=0.1),
             transforms.RandomVerticalFlip()
         ]
     else:
         raise ValueError('not expected dataset = {}'.format(dataset))
 
-    normalize = [
-        transforms.ToTensor(),
-        transforms.Normalize(MEAN, STD)
-    ]
+    normalize = [transforms.ToTensor(), transforms.Normalize(MEAN, STD)]
 
     train_transform = transforms.Compose(transf + normalize)
     valid_transform = transforms.Compose(normalize)

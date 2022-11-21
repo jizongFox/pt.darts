@@ -6,10 +6,7 @@ import genotypes as gt
 
 def plot(genotype, file_path, caption=None):
     """ make DAG plot and save to file_path as .png """
-    edge_attr = {
-        'fontsize': '20',
-        'fontname': 'times'
-    }
+    edge_attr = {'fontsize': '20', 'fontname': 'times'}
     node_attr = {
         'style': 'filled',
         'shape': 'rect',
@@ -20,11 +17,10 @@ def plot(genotype, file_path, caption=None):
         'penwidth': '2',
         'fontname': 'times'
     }
-    g = Digraph(
-        format='png',
-        edge_attr=edge_attr,
-        node_attr=node_attr,
-        engine='dot')
+    g = Digraph(format='png',
+                edge_attr=edge_attr,
+                node_attr=node_attr,
+                engine='dot')
     g.body.extend(['rankdir=LR'])
 
     # input nodes
@@ -43,7 +39,7 @@ def plot(genotype, file_path, caption=None):
             elif j == 1:
                 u = "c_{k-1}"
             else:
-                u = str(j-2)
+                u = str(j - 2)
 
             v = str(i)
             g.edge(u, v, label=op, fillcolor="gray")

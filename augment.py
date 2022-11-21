@@ -8,7 +8,6 @@ from config import AugmentConfig
 import utils
 from models.augment_cnn import AugmentCNN
 
-
 config = AugmentConfig()
 
 device = torch.device("cuda")
@@ -17,7 +16,8 @@ device = torch.device("cuda")
 writer = SummaryWriter(log_dir=os.path.join(config.path, "tb"))
 writer.add_text('config', config.as_markdown(), 0)
 
-logger = utils.get_logger(os.path.join(config.path, "{}.log".format(config.name)))
+logger = utils.get_logger(
+    os.path.join(config.path, "{}.log".format(config.name)))
 config.print_params(logger.info)
 
 
@@ -36,12 +36,15 @@ def main():
 
     # get data with meta info
     input_size, input_channels, n_classes, train_data, valid_data = utils.get_data(
-        config.dataset, config.data_path, config.cutout_length, validation=True)
+        config.dataset,
+        config.data_path,
+        config.cutout_length,
+        validation=True)
 
     criterion = nn.CrossEntropyLoss().to(device)
     use_aux = config.aux_weight > 0.
-    model = AugmentCNN(input_size, input_channels, config.init_channels, n_classes, config.layers,
-                       use_aux, config.genotype)
+    model = AugmentCNN(input_size, input_channels, config.init_channels,
+                       n_classes, config.layers, use_aux, config.genotype)
     model = nn.DataParallel(model, device_ids=config.gpus).to(device)
 
     # model size
@@ -49,7 +52,9 @@ def main():
     logger.info("Model size = {:.3f} MB".format(mb_params))
 
     # weights optimizer
-    optimizer = torch.optim.SGD(model.parameters(), config.lr, momentum=config.momentum,
+    optimizer = torch.optim.SGD(model.parameters(),
+                                config.lr,
+                                momentum=config.momentum,
                                 weight_decay=config.weight_decay)
 
     train_loader = torch.utils.data.DataLoader(train_data,
@@ -62,7 +67,8 @@ def main():
                                                shuffle=False,
                                                num_workers=config.workers,
                                                pin_memory=True)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, config.epochs)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, config.epochs)
 
     best_top1 = 0.
     # training loop
@@ -75,7 +81,7 @@ def main():
         train(train_loader, model, optimizer, criterion, epoch)
 
         # validation
-        cur_step = (epoch+1) * len(train_loader)
+        cur_step = (epoch + 1) * len(train_loader)
         top1 = validate(valid_loader, model, criterion, epoch, cur_step)
 
         # save
@@ -96,7 +102,7 @@ def train(train_loader, model, optimizer, criterion, epoch):
     top5 = utils.AverageMeter()
     losses = utils.AverageMeter()
 
-    cur_step = epoch*len(train_loader)
+    cur_step = epoch * len(train_loader)
     cur_lr = optimizer.param_groups[0]['lr']
     logger.info("Epoch {} LR {}".format(epoch, cur_lr))
     writer.add_scalar('train/lr', cur_lr, cur_step)
@@ -122,19 +128,25 @@ def train(train_loader, model, optimizer, criterion, epoch):
         top1.update(prec1.item(), N)
         top5.update(prec5.item(), N)
 
-        if step % config.print_freq == 0 or step == len(train_loader)-1:
+        if step % config.print_freq == 0 or step == len(train_loader) - 1:
             logger.info(
                 "Train: [{:3d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.3f} "
                 "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
-                    epoch+1, config.epochs, step, len(train_loader)-1, losses=losses,
-                    top1=top1, top5=top5))
+                    epoch + 1,
+                    config.epochs,
+                    step,
+                    len(train_loader) - 1,
+                    losses=losses,
+                    top1=top1,
+                    top5=top5))
 
         writer.add_scalar('train/loss', loss.item(), cur_step)
         writer.add_scalar('train/top1', prec1.item(), cur_step)
         writer.add_scalar('train/top5', prec5.item(), cur_step)
         cur_step += 1
 
-    logger.info("Train: [{:3d}/{}] Final Prec@1 {:.4%}".format(epoch+1, config.epochs, top1.avg))
+    logger.info("Train: [{:3d}/{}] Final Prec@1 {:.4%}".format(
+        epoch + 1, config.epochs, top1.avg))
 
 
 def validate(valid_loader, model, criterion, epoch, cur_step):
@@ -146,7 +158,8 @@ def validate(valid_loader, model, criterion, epoch, cur_step):
 
     with torch.no_grad():
         for step, (X, y) in enumerate(valid_loader):
-            X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
+            X, y = X.to(device, non_blocking=True), y.to(device,
+                                                         non_blocking=True)
             N = X.size(0)
 
             logits, _ = model(X)
@@ -157,18 +170,24 @@ def validate(valid_loader, model, criterion, epoch, cur_step):
             top1.update(prec1.item(), N)
             top5.update(prec5.item(), N)
 
-            if step % config.print_freq == 0 or step == len(valid_loader)-1:
+            if step % config.print_freq == 0 or step == len(valid_loader) - 1:
                 logger.info(
                     "Valid: [{:3d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.3f} "
                     "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
-                        epoch+1, config.epochs, step, len(valid_loader)-1, losses=losses,
-                        top1=top1, top5=top5))
+                        epoch + 1,
+                        config.epochs,
+                        step,
+                        len(valid_loader) - 1,
+                        losses=losses,
+                        top1=top1,
+                        top5=top5))
 
     writer.add_scalar('val/loss', losses.avg, cur_step)
     writer.add_scalar('val/top1', top1.avg, cur_step)
     writer.add_scalar('val/top5', top5.avg, cur_step)
 
-    logger.info("Valid: [{:3d}/{}] Final Prec@1 {:.4%}".format(epoch+1, config.epochs, top1.avg))
+    logger.info("Valid: [{:3d}/{}] Final Prec@1 {:.4%}".format(
+        epoch + 1, config.epochs, top1.avg))
 
     return top1.avg
 

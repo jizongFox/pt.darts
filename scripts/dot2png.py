@@ -12,11 +12,11 @@ from PIL import Image
 import argparse
 import time
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("src_dir", help="dir of original dot files")
 parser.add_argument("dst_dir", help="destination of dot files & png files")
-parser.add_argument("gif_prefix", help="final gif prefix (path with file prefix)")
+parser.add_argument("gif_prefix",
+                    help="final gif prefix (path with file prefix)")
 args = parser.parse_args()
 
 if not os.path.exists(args.dst_dir):
@@ -46,16 +46,19 @@ def add_epoch_caption(src_dir, dst_dir):
         out_path = os.path.join(dst_dir, fn)
         with open(path) as f:
             r = f.readlines()
-            r.insert(-1,
-                     "\tfontname=times fontsize=20 height=1.5 label=\"Epoch {:02d}\" "
-                     "overlap=false\n".format(ep+1))
+            r.insert(
+                -1,
+                "\tfontname=times fontsize=20 height=1.5 label=\"Epoch {:02d}\" "
+                "overlap=false\n".format(ep + 1))
             text = "".join(r)
             with open(out_path, "w") as fout:
                 fout.write(text)
 
             # convert dot to png
             png_path = out_path + ".png"
-            subprocess.call("dot -Tpng {dot} -o {png}".format(dot=out_path, png=png_path), shell=True)
+            subprocess.call("dot -Tpng {dot} -o {png}".format(dot=out_path,
+                                                              png=png_path),
+                            shell=True)
 
             out_paths.append(out_path)
 
@@ -90,8 +93,9 @@ def to_square(dir_path):
         png_path = path + ".png"
         final_path = path + "-maxsize.png"
         subprocess.call("convert {png} -gravity center -background white "
-                        "-extent {extent} {out}".format(
-                            png=png_path, out=final_path, extent=extent),
+                        "-extent {extent} {out}".format(png=png_path,
+                                                        out=final_path,
+                                                        extent=extent),
                         shell=True)
 
 
@@ -102,16 +106,17 @@ def to_gif(dst_dir, gif_prefix):
     print("Normal ... ", end="")
     cmd = "convert -resize 40% -delay 30 -loop 0 {target_glob} {output_path}".format(
         target_glob=os.path.join(dst_dir, "*-normal-maxsize.png"),
-        output_path=gif_prefix+"-normal.gif")
+        output_path=gif_prefix + "-normal.gif")
     subprocess.call(cmd, shell=True)
 
     print("{:.0f}s".format(time.time() - st))
     st = time.time()
     print("Reduce ... ", end="")
-    subprocess.call("convert -resize 40% -delay 30 -loop 0 {target_glob} {output_path}".format(
-                        target_glob=os.path.join(dst_dir, "*-reduce-maxsize.png"),
-                        output_path=gif_prefix+"-reduce.gif"),
-                    shell=True)
+    subprocess.call(
+        "convert -resize 40% -delay 30 -loop 0 {target_glob} {output_path}".
+        format(target_glob=os.path.join(dst_dir, "*-reduce-maxsize.png"),
+               output_path=gif_prefix + "-reduce.gif"),
+        shell=True)
     print("{:.0f}s".format(time.time() - st))
     print("DONE !")
 
